@@ -1,8 +1,11 @@
 package br.edu.fema.projetopadrao.pessoa.service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +14,7 @@ import org.springframework.stereotype.Service;
 import br.edu.fema.projetopadrao.exception.custom.ObjectNotFoundException;
 import br.edu.fema.projetopadrao.pessoa.dto.PessoaDTO;
 import br.edu.fema.projetopadrao.pessoa.enums.EstadoCivil;
+import br.edu.fema.projetopadrao.pessoa.enums.Sexo;
 import br.edu.fema.projetopadrao.pessoa.enums.TipoPessoa;
 import br.edu.fema.projetopadrao.pessoa.model.Pessoa;
 import br.edu.fema.projetopadrao.pessoa.repository.PessoaRepository;
@@ -31,7 +35,7 @@ public class PessoaService {
         Pessoa pessoa = JPARepositoryUtils.verificarSeObjetoExiste(pessoaRepository, Pessoa.class, idPessoa);
         return ResponseEntity.ok(new PessoaDTO(pessoa));
     }
-    
+
     public ResponseEntity<List<PessoaDTO>> listarPessoasCasadasEJuridicas() {
         List<Pessoa> pessoas = pessoaRepository.findByEstadoCivilAndTipoPessoa(EstadoCivil.CASADO, TipoPessoa.JURIDICA);
         return ResponseEntity.ok(PessoaDTO.converter(pessoas));
@@ -59,14 +63,39 @@ public class PessoaService {
     }
 
     public ResponseEntity<PessoaDTO> listarUltimaPessoaCadastrada() {
-        Optional<Pessoa> optionalPessoa = pessoaRepository.findFirstByOrderByDataCadastroDesc();
-        if (!optionalPessoa.isPresent()) {
-            throw new ObjectNotFoundException("Erro ao buscar ultima pessoa cadastrada");
-        }
-        
+        List<Pessoa> pessoas = pessoaRepository.findAll();
+        Optional<Pessoa> optionalPessoa = pessoas.stream()
+                .max(Comparator.comparing(Pessoa::getDataCadastro));
+        if (!optionalPessoa.isPresent())
+            throw new ObjectNotFoundException("Não foi possivel encontrar a ultima pessoa cadastrada!");
+
         return ResponseEntity.ok(new PessoaDTO(optionalPessoa.get()));
     }
 
+    public ResponseEntity<Map<Sexo, Long>> listarPessoasSeparadasPorSexo() {
+        List<Pessoa> pessoas = pessoaRepository.findAll();
+        Map<Sexo, Long> totalPorSexo = pessoas.stream()
+                .collect(Collectors.groupingBy(Pessoa::getSexo, Collectors.counting()));
+        return ResponseEntity.ok(totalPorSexo);
+    }
 
+    public ResponseEntity<Map<LocalDate, List<Pessoa>>> listarPessoasAgrupadasPorAno() {
+        List<Pessoa> pessoas = pessoaRepository.findAll();
+        Map<LocalDate, List<Pessoa>> pessoasPorAno = pessoas.stream()
+                .collect(Collectors.groupingBy(Pessoa::getDataCadastro));
+
+        return ResponseEntity.ok(pessoasPorAno);
+    }
+
+    public ResponseEntity<Optional<LocalDate>> listarPrimeiraPessoaCadastrada() {
+        List<Pessoa> pessoas = pessoaRepository.findAll();
+        Optional<LocalDate> primeiraPessoa = pessoas.stream()
+                .map(Pessoa::getDataCadastro)
+                .min(LocalDate::compareTo);
+        if (!primeiraPessoa.isPresent())
+            throw new ObjectNotFoundException("Não foi possivel encontrar a ultima pessoa cadastrada!");
+
+        return ResponseEntity.ok(primeiraPessoa);
+    }
 
 }

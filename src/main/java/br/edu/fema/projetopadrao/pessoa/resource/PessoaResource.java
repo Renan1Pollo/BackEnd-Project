@@ -1,6 +1,9 @@
 package br.edu.fema.projetopadrao.pessoa.resource;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.edu.fema.projetopadrao.pessoa.dto.PessoaDTO;
+import br.edu.fema.projetopadrao.pessoa.enums.Sexo;
+import br.edu.fema.projetopadrao.pessoa.model.Pessoa;
 import br.edu.fema.projetopadrao.pessoa.service.PessoaService;
 
 @RestController
@@ -58,4 +63,24 @@ public class PessoaResource {
     public ResponseEntity<PessoaDTO> listarUltimaPessoaCadastrada() {
         return this.pessoaService.listarUltimaPessoaCadastrada();
     }
+
+    @GetMapping("/buscarPessoasSeparadasPorSexo")
+    public ResponseEntity<Map<Sexo, Long>> listarPessoasSeparadasPorSexo() {
+        return this.pessoaService.listarPessoasSeparadasPorSexo();
+    }
+
+    @GetMapping("/buscarPessoasAgrupadasPorAno")
+    public ResponseEntity<Map<LocalDate, List<Pessoa>>> listarPessoasAgrupadasPorAno() {
+        return this.pessoaService.listarPessoasAgrupadasPorAno();
+    }
+
+    @GetMapping("/buscarPrimeiraPessoaCadastrada")
+    public ResponseEntity<Optional<LocalDate>> listarPrimeiraPessoaCadastrada() {
+        return this.pessoaService.listarPrimeiraPessoaCadastrada();
+    }
+
+    // @GetMapping("/buscarPrimeiraPessoaCadastrada")
+    // public ResponseEntity<Optional<LocalDate>> listarPrimeiraPessoaCadastrada() {
+    //     return this.pessoaService.listarPrimeiraPessoaCadastrada();
+    // }
 }
